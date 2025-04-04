@@ -9,12 +9,6 @@ import { Logger } from "./logger.js";
 import { fetchWithRetry } from "./fetch-with-retry.js";
 import { metrics } from "./metrics.js";
 
-// Initialize API domain allowed
-const allowedAPILinks = process.env.ALLOWED_API_LINKS?.split(",") || "*";
-if (allowedAPILinks !== "*") {
-  allowedAPILinks.push(process.env.API_URL || `http://localhost:${PORT}`);
-}
-
 // Initialize logger
 const logger = new Logger("UptimeRobot API");
 
@@ -36,7 +30,7 @@ app.use((req, res, next) => {
   const host = req.headers.host;
 
   // If the request domain does not match the authorized domain
-  if (host !== allowedAPILinks) {
+  if (host !== process.env.API_URL || `http://localhost:${PORT}`) {
     // Redirects to the correct domain, retaining the original URL
     return res.redirect(301, `https://${allowedAPILinks}${req.originalUrl}`);
   }
