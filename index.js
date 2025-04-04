@@ -28,11 +28,12 @@ const app = express();
 // Middleware for domain verification
 app.use((req, res, next) => {
   const host = req.headers.host;
+  const allowedDomain = process.env.API_URL.replace(/https?:\/\//, ""); // Remove protocol if necessary
+  const localDomain = `localhost:${PORT}`;
 
-  // If the request domain does not match the authorized domain
-  if (host !== process.env.API_URL || `http://localhost:${PORT}`) {
-    // Redirects to the correct domain, retaining the original URL
-    return res.redirect(301, `https://${allowedAPILinks}${req.originalUrl}`);
+  // If the host is neither the authorized domain nor the local domain, redirect
+  if (host !== allowedDomain && host !== localDomain) {
+    return res.redirect(301, `https://${allowedDomain}${req.originalUrl}`);
   }
   next();
 });
@@ -91,7 +92,7 @@ app.get("/api/monitors", async (req, res, next) => {
     if (cachedData) {
       logger.debug("Returning cached monitors data");
       metrics.recordCacheHit();
-      return res.json(cachedData);
+      return res.json({ success: true, data: cachedData });
     }
 
     metrics.recordCacheMiss();
@@ -118,14 +119,18 @@ app.get("/api/monitors", async (req, res, next) => {
     if (!response.ok) {
       logger.error("UptimeRobot API error", { status: response.status, data });
       return res.status(response.status || 500).json({
-        error: "Failed to fetch monitors",
-        details: data,
+        success: false,
+        error: {
+          code: response.status || 500,
+          message: "Failed to fetch monitors",
+          details: data,
+        },
       });
     }
 
     // Cache the successful response
     monitorsCache.set("all_monitors", data);
-    res.json(data);
+    res.json({ success: true, data });
   } catch (error) {
     logger.error("Error in /api/monitors", { error: error.message });
     next(error);
@@ -143,7 +148,7 @@ app.get("/api/monitor/:pageId/:monitorId", async (req, res, next) => {
     if (cachedData) {
       logger.debug(`Returning cached data for monitor ${monitorId}`);
       metrics.recordCacheHit();
-      return res.json(cachedData);
+      return res.json({ success: true, data: cachedData });
     }
 
     metrics.recordCacheMiss();
@@ -167,14 +172,18 @@ app.get("/api/monitor/:pageId/:monitorId", async (req, res, next) => {
         data,
       });
       return res.status(response.status || 500).json({
-        error: "Failed to fetch monitor details",
-        details: data,
+        success: false,
+        error: {
+          code: response.status || 500,
+          message: "Failed to fetch monitor details",
+          details: data,
+        },
       });
     }
 
     // Cache the successful response
     monitorDetailsCache.set(cacheKey, data);
-    res.json(data);
+    res.json({ success: true, data });
   } catch (error) {
     logger.error("Error in /api/monitor/:pageId/:monitorId", {
       error: error.message,
@@ -188,34 +197,56 @@ app.post("/api/clear-cache", (req, res) => {
   monitorsCache.clear();
   monitorDetailsCache.clear();
   logger.info("Cache cleared manually");
-  res.json({ success: true, message: "Cache cleared successfully" });
+  res.json({
+    success: true,
+    data: { message: "Cache cleared successfully" },
+  });
 });
 
 // Health check endpoint
 app.get("/health", (req, res) => {
   res.status(200).json({
-    status: "ok",
-    uptime: process.uptime(),
-    timestamp: Date.now(),
-    version: "1.0.0",
+    success: true,
+    data: {
+      status: "ok",
+      uptime: process.uptime(),
+      timestamp: Date.now(),
+      version: "1.0.0",
+    },
   });
 });
 
 // Metrics endpoint
 app.get("/metrics", (req, res) => {
-  res.json(metrics.getMetrics());
+  res.json({ success: true, data: metrics.getMetrics() });
 });
 
-// Catch-all for 404 errors
+// Catch-all for 404 errors with a detailed error response
 app.use((req, res) => {
-  logger.warn(`Route not found: ${req.originalUrl}`);
-  res.status(404).json({ error: "Not found" });
+  res.status(404).json({
+    success: false,
+    error: {
+      code: 404,
+      message: "The requested resource has not been found.",
+      method: req.method,
+      endpoint: req.originalUrl,
+      timestamp: new Date().toISOString(),
+    },
+  });
 });
 
-// Error handling middleware
+// Error handling middleware for unhandled errors
 app.use((err, req, res, next) => {
   logger.error("Unhandled error", { error: err.message, stack: err.stack });
-  res.status(500).json({ error: "Internal server error" });
+  res.status(500).json({
+    success: false,
+    error: {
+      code: 500,
+      message: "Internal server error",
+      details: err.message,
+      timestamp: new Date().toISOString(),
+    },
+  });
 });
 
 // Start the server
