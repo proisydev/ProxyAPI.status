@@ -1,8 +1,10 @@
-# UptimeRobot API Proxy
+# ProxyAPI.status
 
-A minimalist, secure, and high-performance backend API for interacting with the UptimeRobot API. This project allows you to retrieve monitor data via the UptimeRobot API and obtain detailed information about incidents specific to a monitor.
+A minimalist, secure, and high-performance API proxy for interacting with the UptimeRobot API. This project allows you to retrieve monitor data and obtain detailed incident information with a standardized API response format – all without a build step.
 
-## 📋 Table of Contents
+---
+
+## Table of Contents
 
 - [Features](#features)
 - [Project Structure](#project-structure)
@@ -15,46 +17,55 @@ A minimalist, secure, and high-performance backend API for interacting with the 
 - [Contributing](#contributing)
 - [License](#license)
 
-## ✨ Features
+---
 
-- **Minimalist**: Simple and efficient architecture
-- **Secure**: Implementation of CORS, rate limiting, and secure headers
-- **High-Performance**: Response caching to reduce API calls
-- **Resilient**: Retry mechanism for API calls
-- **Observable**: Logging and metrics to monitor performance
+## Features
 
-## 📁 Project Structure
+- **Minimalist**: A clean, efficient architecture with no build process.
+- **Secure**: Implements CORS, rate limiting, and secure HTTP headers.
+- **High-Performance**: Caching is used to reduce API calls and improve response times.
+- **Resilient**: Built-in retry mechanism for robust API calls.
+- **Observable**: Integrated logging and metrics for monitoring performance.
+- **Standardized Responses**: All endpoints return consistent JSON structures.
+
+---
+
+## Project Structure
 
 ```
-uptimerobot-api/
-├── .env.example        # Example environment variables file
-├── .gitignore          # Files to be ignored by Git
-├── index.js            # Main application entry point
-├── cache.js            # Cache system implementation
-├── logger.js           # Logging utility
-├── fetch-with-retry.js # Utility for resilient API calls
-├── metrics.js          # Metrics collection and exposure
-├── package.json        # Dependencies and scripts
-├── vercel.json         # Configuration for Vercel deployment
-└── README.md           # Project documentation
+proxyapi.status/
+├── .env.example            # Example environment variables file
+├── .gitignore              # Files ignored by Git
+├── index.js                # Main application entry point
+├── cache.js                # Cache system implementation
+├── logger.js               # Logging utility
+├── fetch-with-retry.js     # Utility for resilient API calls
+├── metrics.js              # Metrics collection and exposure
+├── package.json            # Dependencies and scripts
+├── vercel.json             # Vercel deployment configuration
+└── README.md               # Project documentation
 ```
 
-## 📋 Prerequisites
+---
+
+## Prerequisites
 
 - Node.js 18.x or higher
 - npm or yarn
-- UptimeRobot account with an API key
+- An UptimeRobot account with your API key
 
-## 🚀 Installation
+---
 
-1. Clone this repository:
+## Installation
+
+1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-username/uptimerobot-api.git
-   cd uptimerobot-api
+   git clone https://github.com/PR0ISY/ProxyAPI.status.git
+   cd ProxyAPI.status
    ```
 
-2. Install dependencies:
+2. **Install dependencies:**
 
    ```bash
    npm install
@@ -62,19 +73,19 @@ uptimerobot-api/
    yarn install
    ```
 
-3. Create a `.env` file based on `.env.example`:
+3. **Create a `.env` file:**
 
    ```bash
    cp .env.example .env
    ```
 
-4. Modify the `.env` file with your own values.
+4. **Update the `.env` file** with your configuration values.
 
-## ⚙️ Configuration
+---
 
-### Environment Variables
+## Configuration
 
-Create a `.env` file at the root of the project with the following variables:
+In your `.env` file, set the following environment variables:
 
 ```plaintext
 PORT=3000
@@ -84,17 +95,19 @@ API_URL=https://your-api-url.vercel.app
 NODE_ENV=development
 ```
 
-| Variable             | Description                           | Required                  |
-| -------------------- | ------------------------------------- | ------------------------- |
-| PORT                 | Port on which the API will run        | No (default: 3000)        |
-| UPTIME_ROBOT_API_KEY | Your UptimeRobot API key              | Yes                       |
-| ALLOWED_ORIGINS      | List of allowed origins (CORS)        | No (default: \*)          |
-| API_URL              | Base URL of your API                  | No                        |
-| NODE_ENV             | Environment (development, production) | No (default: development) |
+| Variable             | Description                                    | Required                  |
+| -------------------- | ---------------------------------------------- | ------------------------- |
+| PORT                 | Port on which the API will run                 | No (default: 3000)        |
+| UPTIME_ROBOT_API_KEY | Your UptimeRobot API key                       | Yes                       |
+| ALLOWED_ORIGINS      | Comma-separated list of allowed origins (CORS) | No (default: \*)          |
+| API_URL              | Base URL of your API                           | No                        |
+| NODE_ENV             | Environment (development, production)          | No (default: development) |
 
-## 🏃‍♂️ Usage
+---
 
-### Start in development mode
+## Usage
+
+### Development
 
 ```bash
 npm run dev
@@ -102,7 +115,7 @@ npm run dev
 yarn dev
 ```
 
-### Start in production mode
+### Production
 
 ```bash
 npm start
@@ -110,137 +123,164 @@ npm start
 yarn start
 ```
 
-## 🔌 API Endpoints
+---
 
-### Retrieve all monitors
+## API Endpoints
 
-```plaintext
+### Retrieve All Monitors
+
+```http
 GET /api/monitors
 ```
 
-Retrieves all monitors from UptimeRobot.
-
-**Example response:**
+**Response Example:**
 
 ```json
 {
-  "stat": "ok",
-  "pagination": {
-    "offset": 0,
-    "limit": 50,
-    "total": 2
-  },
-  "monitors": [
-    {
-      "id": 123456789,
-      "friendly_name": "My website",
-      "url": "https://example.com",
-      "type": 1,
-      "status": 2,
-      "all_time_uptime_ratio": 99.98,
-      "create_datetime": 1612345678
-    }
-  ]
-}
-```
-
-### Retrieve details of a specific monitor
-
-```plaintext
-GET /api/monitor/:pageId/:monitorId
-```
-
-Retrieves details of a specific monitor, including incidents.
-
-**Parameters:**
-
-- `pageId`: Status page ID
-- `monitorId`: Monitor ID
-
-**Example response:**
-
-```json
-{
-  "monitor": {
-    "id": "m789xyz",
-    "friendly_name": "My website",
-    "status": "up",
-    "incidents": [
-      {
-        "id": "inc123",
-        "type": "down",
-        "duration": 125,
-        "start_time": 1612345678,
-        "end_time": 1612345803
-      }
-    ]
+  "success": true,
+  "data": {
+    /* Monitor data from UptimeRobot */
   }
 }
 ```
 
-### Clear cache
+---
 
-```plaintext
+### Retrieve Specific Monitor Details
+
+```http
+GET /api/monitor/:pageId/:monitorId
+```
+
+- **Parameters:**
+  - `pageId`: Status page ID
+  - `monitorId`: Monitor ID
+
+**Response Example:**
+
+```json
+{
+  "success": true,
+  "data": {
+    /* Monitor details including incidents */
+  }
+}
+```
+
+---
+
+### Clear Cache
+
+```http
 POST /api/clear-cache
 ```
 
-Manually clears the API cache.
+**Response Example:**
 
-### Check API status
+```json
+{
+  "success": true,
+  "data": { "message": "Cache cleared successfully" }
+}
+```
 
-```plaintext
+---
+
+### Health Check
+
+```http
 GET /health
 ```
 
-Checks the status of the API.
+**Response Example:**
 
-### Display metrics
+```json
+{
+  "success": true,
+  "data": {
+    "status": "ok",
+    "uptime": 12345,
+    "timestamp": 1612345678901,
+    "version": "1.0.0"
+  }
+}
+```
 
-```plaintext
+---
+
+### Display Metrics
+
+```http
 GET /metrics
 ```
 
-Displays API performance metrics.
+**Response Example:**
 
-## 🚢 Deployment
+```json
+{
+  "success": true,
+  "data": {
+    /* API performance metrics */
+  }
+}
+```
 
-### Deployment on Vercel
+---
 
-1. Create an account on [Vercel](https://vercel.com) if you don't already have one.
-2. Install Vercel CLI:
+## Deployment
+
+### Deploy on Vercel
+
+1. Sign up or log in to [Vercel](https://vercel.com).
+2. Install the Vercel CLI:
+
    ```bash
    npm install -g vercel
    ```
+
 3. Log in to your Vercel account:
+
    ```bash
    vercel login
    ```
+
 4. Deploy your project:
+
    ```bash
    vercel
    ```
-5. Configure environment variables in the Vercel dashboard:
-   1. Go to your project settings
-   2. Navigate to the "Environment Variables" tab
-   3. Add all necessary environment variables
 
-### Manual Deployment
+5. Configure your environment variables in the Vercel dashboard.
 
-1. Build the project:
+---
+
+## Contributing
+
+Contributions are welcome! To contribute:
+
+1. Fork the repository.
+2. Create a new branch:
+
    ```bash
-   npm run build
+   git checkout -b feature/your-feature
    ```
-2. Start the server:
+
+3. Commit your changes:
+
    ```bash
-   npm start
+   git commit -m 'Add your feature'
    ```
 
-## 🤝 Contributing
+4. Push the branch:
 
-Contributions are welcome! Feel free to open an issue or submit a pull request.
+   ```bash
+   git push origin feature/your-feature
+   ```
 
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+5. Open a Pull Request.
+
+---
+
+## License
+
+This project is licensed under the MIT License.
