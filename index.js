@@ -15,18 +15,6 @@ if (allowedAPILinks !== "*") {
   allowedAPILinks.push(process.env.API_URL || `http://localhost:${PORT}`);
 }
 
-// Middleware for domain verification
-app.use((req, res, next) => {
-  const host = req.headers.host;
-
-  // If the request domain does not match the authorized domain
-  if (host !== allowedAPILinks) {
-    // Redirects to the correct domain, retaining the original URL
-    return res.redirect(301, `https://${allowedAPILinks}${req.originalUrl}`);
-  }
-  next();
-});
-
 // Initialize logger
 const logger = new Logger("UptimeRobot API");
 
@@ -42,6 +30,18 @@ const monitorDetailsCache = new Cache(2 * 60 * 1000); // 2 minutes TTL
 
 // Initialize Express app
 const app = express();
+
+// Middleware for domain verification
+app.use((req, res, next) => {
+  const host = req.headers.host;
+
+  // If the request domain does not match the authorized domain
+  if (host !== allowedAPILinks) {
+    // Redirects to the correct domain, retaining the original URL
+    return res.redirect(301, `https://${allowedAPILinks}${req.originalUrl}`);
+  }
+  next();
+});
 
 // Security middleware
 app.use(helmet());
