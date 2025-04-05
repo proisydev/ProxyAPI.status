@@ -4,10 +4,10 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 dotenv.config();
-import { Cache } from "./cache.js";
-import { Logger } from "./logger.js";
-import { fetchWithRetry } from "./fetch-with-retry.js";
-import { metrics } from "./metrics.js";
+import { Cache } from "./libs/cache.js";
+import { Logger } from "./libs/logger.js";
+import { fetchWithRetry } from "./utils/fetch-with-retry.js";
+import { metrics } from "./utils/metrics.js";
 
 // Initialize logger
 const logger = new Logger("UptimeRobot API");

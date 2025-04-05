@@ -34,16 +34,23 @@ A minimalist, secure, and high-performance API proxy for interacting with the Up
 
 ```
 proxyapi.status/
-├── .env.example            # Example environment variables file
-├── .gitignore              # Files ignored by Git
-├── index.js                # Main application entry point
-├── cache.js                # Cache system implementation
-├── logger.js               # Logging utility
-├── fetch-with-retry.js     # Utility for resilient API calls
-├── metrics.js              # Metrics collection and exposure
-├── package.json            # Dependencies and scripts
-├── vercel.json             # Vercel deployment configuration
-└── README.md               # Project documentation
+├── .env.example                  # Example environment variables file
+├── .gitignore / .vercelignore    # Files ignored by Git & Vercel
+├── vercel.json                   # Vercel deployment configuration
+├── README.md                     # Project documentation
+├── package.json                  # Dependencies and scripts
+├── docs/
+├──── index.html                  # API's demo
+├── src/
+├──── index.js                    # Main application entry point
+├────── libs/
+├──────── cache.js                # Cache system implementation
+├──────── logger.js               # Logging utility
+├────── tests/
+├──────── test-api-key.js         # Test if the UPTIME_ROBOT_API_KEY .env work
+├────── utils/
+├──────── fetch-with-retry.js     # Utility for resilient API calls
+└──────── metrics.js              # Metrics collection and exposure
 ```
 
 ---
@@ -76,6 +83,7 @@ proxyapi.status/
 3. **Create a `.env` file:**
 
    ```bash
+   cd src
    cp .env.example .env
    ```
 

@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { Logger } from "./logger.js";
+import { Logger } from "../libs/logger.js";
 
 const logger = new Logger("FetchWithRetry");
 
