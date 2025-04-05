@@ -15,12 +15,15 @@ const logger = new Logger("UptimeRobot API");
 // Environment variables
 const PORT = process.env.PORT || 3000;
 const UPTIME_ROBOT_API_KEY = process.env.UPTIME_ROBOT_API_KEY;
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(",") || "*";
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS || "";
+const allowedOrigins = ALLOWED_ORIGINS.split(",").map((origin) =>
+  origin.trim()
+);
 const API_URL = process.env.API_URL || `http://localhost:${PORT}`;
 
 // Initialize caches
-const monitorsCache = new Cache(5 * 60 * 1000); // 5 minutes TTL
-const monitorDetailsCache = new Cache(2 * 60 * 1000); // 2 minutes TTL
+const monitorsCache = new Cache(5 * 60 * 1000);
+const monitorDetailsCache = new Cache(2 * 60 * 1000);
 
 // Initialize Express app
 const app = express();
@@ -28,10 +31,10 @@ const app = express();
 // Middleware for domain verification
 app.use((req, res, next) => {
   const host = req.headers.host;
-  const allowedDomain = process.env.API_URL.replace(/https?:\/\//, ""); // Remove protocol if necessary
   const localDomain = `localhost:${PORT}`;
+  const allowedDomain =
+    process.env.API_URL?.replace(/https?:\/\//, "") || localDomain;
 
-  // If the host is neither the authorized domain nor the local domain, redirect
   if (host !== allowedDomain && host !== localDomain) {
     return res.redirect(301, `https://${allowedDomain}${req.originalUrl}`);
   }
@@ -40,13 +43,29 @@ app.use((req, res, next) => {
 
 // Security middleware
 app.use(helmet());
+
+// CORS setup
+console.log("Allowed origins:", allowedOrigins);
+
 app.use(
   cors({
-    origin: ALLOWED_ORIGINS,
+    origin: (origin, callback) => {
+      console.log("Request origin:", origin);
+      if (!origin) return callback(null, true); // Allow non-browser requests
+
+      const isAllowed = allowedOrigins.some((allowed) =>
+        origin.startsWith(allowed)
+      );
+      if (isAllowed) return callback(null, true);
+
+      console.error("CORS blocked:", origin);
+      return callback(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 app.use(express.json());
 
 // Rate limiting
@@ -84,10 +103,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Endpoint to get all monitors
+// Endpoint: Get all monitors
 app.get("/api/monitors", async (req, res, next) => {
   try {
-    // Check cache first
     const cachedData = monitorsCache.get("all_monitors");
     if (cachedData) {
       logger.debug("Returning cached monitors data");
@@ -128,7 +146,6 @@ app.get("/api/monitors", async (req, res, next) => {
       });
     }
 
-    // Cache the successful response
     monitorsCache.set("all_monitors", data);
     res.json({ success: true, data });
   } catch (error) {
@@ -137,13 +154,12 @@ app.get("/api/monitors", async (req, res, next) => {
   }
 });
 
-// Endpoint to get specific monitor details
+// Endpoint: Get specific monitor details
 app.get("/api/monitor/:pageId/:monitorId", async (req, res, next) => {
   try {
     const { pageId, monitorId } = req.params;
     const cacheKey = `monitor_${pageId}_${monitorId}`;
 
-    // Check cache first
     const cachedData = monitorDetailsCache.get(cacheKey);
     if (cachedData) {
       logger.debug(`Returning cached data for monitor ${monitorId}`);
@@ -181,7 +197,6 @@ app.get("/api/monitor/:pageId/:monitorId", async (req, res, next) => {
       });
     }
 
-    // Cache the successful response
     monitorDetailsCache.set(cacheKey, data);
     res.json({ success: true, data });
   } catch (error) {
@@ -192,18 +207,15 @@ app.get("/api/monitor/:pageId/:monitorId", async (req, res, next) => {
   }
 });
 
-// Endpoint to manually clear cache
+// Endpoint: Clear cache
 app.post("/api/clear-cache", (req, res) => {
   monitorsCache.clear();
   monitorDetailsCache.clear();
   logger.info("Cache cleared manually");
-  res.json({
-    success: true,
-    data: { message: "Cache cleared successfully" },
-  });
+  res.json({ success: true, data: { message: "Cache cleared successfully" } });
 });
 
-// Health check endpoint
+// Health check
 app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -221,7 +233,7 @@ app.get("/metrics", (req, res) => {
   res.json({ success: true, data: metrics.getMetrics() });
 });
 
-// Catch-all for 404 errors with a detailed error response
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -235,7 +247,7 @@ app.use((req, res) => {
   });
 });
 
-// Error handling middleware for unhandled errors
+// Global error handler
 app.use((err, req, res, next) => {
   logger.error("Unhandled error", { error: err.message, stack: err.stack });
   res.status(500).json({
@@ -249,7 +261,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start the server
+// Start server
 app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);
   logger.info(`API URL: ${API_URL}`);
