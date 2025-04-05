@@ -261,7 +261,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
+// Start server (:)
 app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);
   logger.info(`API URL: ${API_URL}`);
