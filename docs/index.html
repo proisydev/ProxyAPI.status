@@ -3,284 +3,184 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Documentation | ProxyAPI.status</title>
+    <title>Docs — ProxyAPI Status</title>
+    <meta name="title" content="Docs — ProxyAPI Status" />
+    <meta
+      name="description"
+      content="Docs of a minimalist and secure backend proxy for the UptimeRobot API. Offers resilient monitoring data access with built-in caching, retry logic, metrics, and rate limiting."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://docs.pstatus.fr/" />
+    <meta property="og:title" content="Docs — ProxyAPI Status" />
+    <meta
+      property="og:description"
+      content="Docs of a minimalist and secure backend proxy for the UptimeRobot API. Offers resilient monitoring data access with built-in caching, retry logic, metrics, and rate limiting."
+    />
+    <meta
+      property="og:image"
+      content="https://proisy.dev/api/image-open-graph?title=Docs%20%E2%80%94%20ProxyAPI%20Status&page=https://docs.pstatus.fr"
+    />
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://docs.pstatus.fr/" />
+    <meta property="twitter:title" content="Docs — ProxyAPI Status" />
+    <meta
+      property="twitter:description"
+      content="Docs of a minimalist and secure backend proxy for the UptimeRobot API. Offers resilient monitoring data access with built-in caching, retry logic, metrics, and rate limiting."
+    />
+    <meta
+      property="twitter:image"
+      content="https://proisy.dev/api/image-open-graph?title=Docs%20%E2%80%94%20ProxyAPI%20Status&page=https://docs.pstatus.fr"
+    />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Prism CSS -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
     />
+    <!-- Prism JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      /* Custom styles to match the design */
+      pre {
+        margin: 0;
+      }
+      code {
+        font-family: monospace;
+        font-size: 0.875rem;
+      }
+    </style>
   </head>
-  <body class="min-h-screen bg-gray-50">
+  <body class="min-h-screen">
     <!-- Header -->
-    <header class="bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        <div class="flex items-center space-x-4">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-8 w-8 text-indigo-600"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-          </svg>
-          <h1 class="text-3xl font-bold text-gray-900">
-            ProxyAPI.status's Docs
-          </h1>
-        </div>
+    <header class="border-b border-gray-200 py-4">
+      <div class="container mx-auto px-4 flex items-center">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6 text-purple-600"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+        </svg>
+        <h1 class="text-xl font-semibold ml-2">ProxyAPI Status</h1>
       </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <!-- Navigation Sidebar -->
-        <nav class="lg:col-span-3">
-          <div class="bg-white shadow rounded-lg p-6">
-            <ul class="space-y-4">
+    <!-- Main content -->
+    <div class="flex flex-1 container mx-auto">
+      <!-- Sidebar -->
+      <aside class="w-64 p-4 border-r border-gray-200 shrink-0">
+        <nav class="space-y-1">
+          <a
+            href="#endpoints"
+            class="flex items-center p-3 text-sm rounded-md hover:bg-gray-100 text-gray-700 font-medium"
+          >
+            <code class="mr-2 text-gray-500">&lt;/&gt;</code>
+            Endpoints
+          </a>
+          <a
+            href="#errors"
+            class="flex items-center p-3 text-sm rounded-md hover:bg-gray-100 text-gray-700 font-medium"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 mr-2 text-gray-500"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+              ></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            Error Handling
+          </a>
+          <a
+            href="#rate-limits"
+            class="flex items-center p-3 text-sm rounded-md hover:bg-gray-100 text-gray-700 font-medium"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 mr-2 text-gray-500"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polygon
+                points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
+              ></polygon>
+            </svg>
+            Rate Limits
+          </a>
+        </nav>
+      </aside>
+
+      <!-- Content -->
+      <main class="flex-1 p-6">
+        <!-- Endpoints -->
+        <section id="endpoints">
+          <h2 class="text-2xl font-bold mb-6">API Endpoints</h2>
+          <div id="endpoints-list" class="space-y-6"></div>
+        </section>
+
+        <!-- Error Handling -->
+        <section id="errors" class="mt-12">
+          <h2 class="text-2xl font-bold mb-6">Error Handling</h2>
+          <div class="border border-gray-200 rounded-lg p-6">
+            <p class="text-gray-600 mb-4">
+              The API uses conventional HTTP response codes to indicate the
+              success or failure of requests:
+            </p>
+            <ul class="list-disc list-inside space-y-2 text-gray-600 ml-4">
+              <li>200 - Success</li>
+              <li>400 - Bad Request</li>
+              <li>401 - Unauthorized</li>
+              <li>404 - Not Found</li>
+              <li>429 - Too Many Requests</li>
+              <li>500 - Internal Server Error</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Rate Limits -->
+        <section id="rate-limits" class="mt-12">
+          <h2 class="text-2xl font-bold mb-6">Rate Limits</h2>
+          <div class="border border-gray-200 rounded-lg p-6">
+            <p class="text-gray-600 mb-4">
+              To ensure fair usage and maintain service stability, the API
+              implements rate limiting:
+            </p>
+            <ul class="list-disc list-inside space-y-2 text-gray-600 ml-4">
+              <li>100 request per 15 mins per IP address</li>
+              <li>Rate limit headers are included in all responses</li>
               <li>
-                <a
-                  href="#endpoints"
-                  class="flex items-center space-x-2 text-gray-700 hover:text-indigo-600"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <polyline points="16 18 22 12 16 6"></polyline>
-                    <polyline points="8 6 2 12 8 18"></polyline>
-                  </svg>
-                  <span>Endpoints</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#errors"
-                  class="flex items-center space-x-2 text-gray-700 hover:text-indigo-600"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path
-                      d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-                    ></path>
-                    <line x1="12" y1="9" x2="12" y2="13"></line>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                  </svg>
-                  <span>Error Handling</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#rate-limits"
-                  class="flex items-center space-x-2 text-gray-700 hover:text-indigo-600"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <polygon
-                      points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
-                    ></polygon>
-                  </svg>
-                  <span>Rate Limits</span>
-                </a>
+                Exceeding the rate limit will result in a 429 Too Many Requests
+                response
               </li>
             </ul>
           </div>
-        </nav>
+        </section>
+      </main>
+    </div>
 
-        <!-- Main Documentation -->
-        <div class="lg:col-span-9 space-y-8">
-          <!-- Endpoints -->
-          <section id="endpoints" class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">API Endpoints</h2>
-            <div class="space-y-6" id="endpoints-list"></div>
-          </section>
-
-          <!-- Error Handling -->
-          <section id="errors" class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">
-              Error Handling
-            </h2>
-            <div class="space-y-4">
-              <p class="text-gray-600">
-                The API uses conventional HTTP response codes to indicate the
-                success or failure of requests:
-              </p>
-              <ul class="list-disc list-inside space-y-2 text-gray-600">
-                <li>200 - Success</li>
-                <li>400 - Bad Request</li>
-                <li>401 - Unauthorized</li>
-                <li>404 - Not Found</li>
-                <li>429 - Too Many Requests</li>
-                <li>500 - Internal Server Error</li>
-              </ul>
-            </div>
-          </section>
-
-          <!-- Rate Limits -->
-          <section id="rate-limits" class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Rate Limits</h2>
-            <div class="space-y-4">
-              <p class="text-gray-600">
-                To ensure fair usage and maintain service stability, the API
-                implements rate limiting:
-              </p>
-              <ul class="list-disc list-inside space-y-2 text-gray-600">
-                <li>1 request per minute per IP address</li>
-                <li>Rate limit headers are included in all responses</li>
-                <li>
-                  Exceeding the rate limit will result in a 429 Too Many
-                  Requests response
-                </li>
-              </ul>
-            </div>
-          </section>
-        </div>
-      </div>
-    </main>
-
-    <script>
-      // Endpoints data
-      const endpoints = [
-        {
-          name: "Get Health",
-          path: "/health",
-          method: "GET",
-          description: "Retrieve the current health of the API",
-          example: `fetch('https://demo-api.pstatus.fr/health')
-  .then(response => response.json())
-  .then(data => console.log(data));`,
-        },
-        {
-          name: "Get Metrics",
-          path: "/metrics",
-          method: "GET",
-          description: "Retrieve the current metrics of the API",
-          example: `fetch('https://demo-api.pstatus.fr/metrics')
-  .then(response => response.json())
-  .then(data => console.log(data));`,
-        },
-        {
-          name: "Get All Monitors",
-          path: "/api/monitors",
-          method: "GET",
-          description: "Retrieve the current status of all monitored services",
-          example: `fetch('https://demo-api.pstatus.fr/api/monitors')
-  .then(response => response.json())
-  .then(data => console.log(data));`,
-        },
-        {
-          name: "Get Monitor Details",
-          path: "/api/monitor/{page_id}/{monitor_id}",
-          method: "GET",
-          description:
-            "Get more detailed information than official API about a specific service with the Uptime Robots Page API",
-          example: `fetch('https://demo-api.pstatus.fr/api/monitor/x5tkeYyJ3g/799396413')
-  .then(response => response.json())
-  .then(data => console.log(data));`,
-        },
-      ];
-
-      // Render endpoints
-      function renderEndpoints() {
-        const endpointsList = document.getElementById("endpoints-list");
-        endpoints.forEach((endpoint) => {
-          const endpointElement = document.createElement("div");
-          endpointElement.className = "border rounded-lg p-4";
-          endpointElement.innerHTML = `
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">${
-            endpoint.name
-          }</h3>
-          <div class="flex items-center space-x-2 mb-2">
-            <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded text-sm font-mono">
-              ${endpoint.method}
-            </span>
-            <span class="font-mono text-gray-600">${endpoint.path}</span>
-          </div>
-          <p class="text-gray-600 mb-4">${endpoint.description}</p>
-          <div class="bg-gray-900 rounded-lg p-4 mb-4">
-            <pre><code class="language-javascript">${
-              endpoint.example
-            }</code></pre>
-          </div>
-          <button
-            onclick="testEndpoint('${endpoint.path}')"
-            class="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polygon points="10 8 16 12 10 16 10 8"></polygon>
-            </svg>
-            <span>Test Endpoint</span>
-          </button>
-          <div id="response-${endpoint.path.replace(
-            /[/{}}]/g,
-            "-"
-          )}" class="mt-4 hidden">
-            <pre><code class="language-json"></code></pre>
-          </div>
-        `;
-          endpointsList.appendChild(endpointElement);
-        });
-        Prism.highlightAll();
-      }
-
-      // Test endpoint function
-      async function testEndpoint(path) {
-        const responseId = `response-${path.replace(/[/{}}]/g, "-")}`;
-        const responseElement = document.getElementById(responseId);
-        const codeElement = responseElement.querySelector("code");
-
-        responseElement.classList.remove("hidden");
-        codeElement.textContent = "Loading...";
-
-        try {
-          const response = await fetch(
-            `https://demo-api.pstatus.fr${path
-              .replace("{page_id}", "x5tkeYyJ3g")
-              .replace("{monitor_id}", "799396413")}`
-          );
-          const data = await response.json();
-          codeElement.textContent = JSON.stringify(data, null, 2);
-          Prism.highlightElement(codeElement);
-        } catch (error) {
-          codeElement.textContent = "Error fetching data";
-        }
-      }
-
-      // Initialize the page
-      renderEndpoints();
-    </script>
+    <script src="./assets/js/render-endpoints.js"></script>
   </body>
 </html>
-a
