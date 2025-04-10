@@ -218,7 +218,7 @@ if (UPTIME_ROBOT_API_KEY_READ_ONLY) {
             "Cache-Control": "no-cache",
           },
           body: JSON.stringify({
-            api_key: UPTIME_ROBOT_API_KEY,
+            api_key: UPTIME_ROBOT_API_KEY_READ_ONLY,
             format: "json",
             all_time_uptime_ratio: 1,
             all_time_uptime_durations: 1,
@@ -294,7 +294,7 @@ if (UPTIME_ROBOT_API_KEY_READ_ONLY) {
           "Cache-Control": "no-cache",
         },
         body: JSON.stringify({
-          api_key: UPTIME_ROBOT_API_KEY,
+          api_key: UPTIME_ROBOT_API_KEY_READ_ONLY,
           format: "json",
         }),
       });
