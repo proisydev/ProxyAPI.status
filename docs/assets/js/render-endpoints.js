@@ -37,6 +37,25 @@ const endpoints = [
 .then(response => response.json())
 .then(data => console.log(data));`,
   },
+  {
+    name: "Get Public Pages",
+    path: "/api/public-pages",
+    method: "GET",
+    description: "Retrieve all public pages data from the UptimeRobot API",
+    example: `fetch('https://demo-api.pstatus.fr/api/public-pages')
+.then(response => response.json())
+.then(data => console.log(data));`,
+  },
+  {
+    name: "Get Account Details",
+    path: "/api/account-details",
+    method: "GET",
+    description:
+      "Retrieve account details, optionally with privacy settings applied",
+    example: `fetch('https://demo-api.pstatus.fr/api/account-details')
+.then(response => response.json())
+.then(data => console.log(data));`,
+  },
 ];
 
 // Render endpoints
