@@ -151,25 +151,25 @@ if (UPTIME_ROBOT_API_KEY_MAIN) {
         }
       );
 
-      const data = await response.json();
+      const resData = await response.json();
 
       if (!response.ok) {
         logger.error("UptimeRobot API error", {
           status: response.status,
-          data,
+          data: resData,
         });
         return res.status(response.status || 500).json({
           success: false,
           error: {
             code: response.status || 500,
             message: "Failed to fetch account details",
-            details: data,
+            details: resData,
           },
         });
       }
 
-      if (ACCOUNT_PRIVACY && data?.account) {
-        const { account } = data;
+      if (ACCOUNT_PRIVACY && resData?.account) {
+        const { account } = resData;
 
         delete account.email;
         delete account.firstname;
@@ -182,12 +182,13 @@ if (UPTIME_ROBOT_API_KEY_MAIN) {
         delete account.registered_at;
       }
 
-      const responseData = {
-        ...data,
+      const data = {
+        ...resData,
         account_privacy: ACCOUNT_PRIVACY,
       };
+
       accountCache.set("account_details", data);
-      res.json({ success: true, responseData });
+      res.json({ success: true, data });
     } catch (error) {
       logger.error("Error in /api/account-details", { error: error.message });
       next(error);
