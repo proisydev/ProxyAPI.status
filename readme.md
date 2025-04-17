@@ -1,4 +1,4 @@
-# ProxyAPI.status
+# watchStatus (API)
 
 A minimalist, secure, and high-performance API proxy for interacting with the UptimeRobot API. This project allows you to retrieve monitor data and obtain detailed incident information with a standardized API response format – all without a build step.
 
@@ -33,7 +33,7 @@ A minimalist, secure, and high-performance API proxy for interacting with the Up
 ## Project Structure
 
 ```
-proxyapi.status/
+watchStatusAPI/
 ├── .env.example                  # Example environment variables file
 ├── .gitignore / .vercelignore    # Files ignored by Git & Vercel
 ├── vercel.json                   # Vercel deployment configuration
@@ -68,8 +68,8 @@ proxyapi.status/
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/PR0ISY/ProxyAPI.status.git
-   cd ProxyAPI.status
+   git clone https://github.com/proisydev/watchStatusAPI.status.git
+   cd watchStatusAPI.status
    ```
 
 2. **Install dependencies:**
