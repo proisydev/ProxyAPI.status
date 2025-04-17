@@ -5,7 +5,7 @@ const endpoints = [
     path: "/health",
     method: "GET",
     description: "Retrieve the current health of the API",
-    example: `fetch('https://demo-api.pstatus.fr/health')
+    example: `fetch('https://demo-api.watchstat.us/health')
 .then(response => response.json())
 .then(data => console.log(data));`,
   },
@@ -14,7 +14,7 @@ const endpoints = [
     path: "/metrics",
     method: "GET",
     description: "Retrieve the current metrics of the API",
-    example: `fetch('https://demo-api.pstatus.fr/metrics')
+    example: `fetch('https://demo-api.watchstat.us/metrics')
 .then(response => response.json())
 .then(data => console.log(data));`,
   },
@@ -23,7 +23,7 @@ const endpoints = [
     path: "/api/monitors",
     method: "GET",
     description: "Retrieve the current status of all monitored services",
-    example: `fetch('https://demo-api.pstatus.fr/api/monitors')
+    example: `fetch('https://demo-api.watchstat.us/api/monitors')
 .then(response => response.json())
 .then(data => console.log(data));`,
   },
@@ -33,7 +33,7 @@ const endpoints = [
     method: "GET",
     description:
       "Get more detailed information than official API about a specific service with the Uptime Robots Page API",
-    example: `fetch('https://demo-api.pstatus.fr/api/monitor/x5tkeYyJ3g/799396413')
+    example: `fetch('https://demo-api.watchstat.us/api/monitor/x5tkeYyJ3g/799396413')
 .then(response => response.json())
 .then(data => console.log(data));`,
   },
@@ -42,7 +42,7 @@ const endpoints = [
     path: "/api/public-pages",
     method: "GET",
     description: "Retrieve all public pages data from the UptimeRobot API",
-    example: `fetch('https://demo-api.pstatus.fr/api/public-pages')
+    example: `fetch('https://demo-api.watchstat.us/api/public-pages')
 .then(response => response.json())
 .then(data => console.log(data));`,
   },
@@ -52,7 +52,7 @@ const endpoints = [
     method: "GET",
     description:
       "Retrieve account details, optionally with privacy settings applied",
-    example: `fetch('https://demo-api.pstatus.fr/api/account-details')
+    example: `fetch('https://demo-api.watchstat.us/api/account-details')
 .then(response => response.json())
 .then(data => console.log(data));`,
   },
@@ -133,7 +133,7 @@ async function testEndpoint(path) {
       .replace("{page_id}", "x5tkeYyJ3g")
       .replace("{monitor_id}", "799396413");
 
-    const response = await fetch(`https://demo-api.pstatus.fr${actualPath}`);
+    const response = await fetch(`https://demo-api.watchstat.us${actualPath}`);
     const data = await response.json();
     codeElement.textContent = JSON.stringify(data, null, 2);
 
