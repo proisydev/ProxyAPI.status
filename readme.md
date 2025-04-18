@@ -68,8 +68,8 @@ watchStatusAPI/
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/proisydev/watchStatusAPI.status.git
-   cd watchStatusAPI.status
+   git clone https://github.com/proisydev/watchStatusAPI.git
+   cd watchStatusAPI
    ```
 
 2. **Install dependencies:**
