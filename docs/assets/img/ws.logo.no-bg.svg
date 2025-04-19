@@ -1,0 +1,12 @@
+<!-- Generated for watchStatus (https://watchstat.us) by wS owner with v0.dev -->
+<svg width="32" height="32" viewBox="25 35 65 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Stylized letter W -->
+  <path d="M30 40L40 80L50 55L60 80L70 40" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Stylized letter S -->
+  <path d="M45 75C45 75 55 65 75 65C95 65 95 85 75 85C55 85 45 75 45 75Z" fill="#8B5CF6"/>
+  
+  <!-- Lightning bolt (status/monitoring symbol) -->
+  <path d="M85 35L65 60H80L60 85" stroke="#8B5CF6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+<!-- Generated for watchStatus (https://watchstat.us) by wS owner with v0.dev -->

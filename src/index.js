@@ -390,7 +390,7 @@ app.post("/api/clear-cache", (req, res) => {
 });
 
 // Health check
-app.get("/health", (req, res) => {
+app.get("/ws/health", (req, res) => {
   res.status(200).json({
     success: true,
     data: {
@@ -403,7 +403,7 @@ app.get("/health", (req, res) => {
 });
 
 // Metrics endpoint
-app.get("/metrics", (req, res) => {
+app.get("/ws/metrics", (req, res) => {
   res.json({ success: true, data: metrics.getMetrics() });
 });
 

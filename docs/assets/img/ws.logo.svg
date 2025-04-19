@@ -1,0 +1,23 @@
+<!-- Generated for watchStatus (https://watchstat.us) by wS owner with v0.dev -->
+<svg width="240" height="240" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Circular background with gradient -->
+  <circle cx="60" cy="60" r="60" fill="url(#paint0_radial)" />
+  
+  <!-- Stylized letter W -->
+  <path d="M30 40L40 80L50 55L60 80L70 40" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Stylized letter S -->
+  <path d="M45 75C45 75 55 65 75 65C95 65 95 85 75 85C55 85 45 75 45 75Z" fill="#8B5CF6"/>
+  
+  <!-- Lightning bolt (status/monitoring symbol) -->
+  <path d="M85 35L65 60H80L60 85" stroke="#8B5CF6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Radial gradient definition -->
+  <defs>
+    <radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(60 60) rotate(90) scale(60)">
+      <stop offset="0" stop-color="#1E1E2F"/>
+      <stop offset="1" stop-color="#0A0C14"/>
+    </radialGradient>
+  </defs>
+</svg>
+<!-- Generated for watchStatus (https://watchstat.us) by wS owner with v0.dev -->
