@@ -54,7 +54,11 @@ if (DB_ACTIVE === true) {
     }
   }
 
-  await initDatabase();
+  // Appeler la fonction explicitement
+  initDatabase().catch((err) => {
+    logger.error("Database initialization failed", { error: err.message });
+    process.exit(1);
+  });
 } else {
   logger.warn("MySQL is disabled. No database connection will be made.");
   logger.warn("Set DB_ACTIVE=true in .env to enable MySQL.");
