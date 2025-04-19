@@ -429,21 +429,14 @@ async function startServer() {
             });
           }
 
-          // 🔄 Property mapping
           if (data?.monitors?.length) {
             data.monitors = data.monitors.map((monitor) => {
-              if (monitor.hasOwnProperty("type")) {
-                monitor.type = monitorTypeMapping[monitor.type] || monitor.type;
-              }
-              if (monitor.hasOwnProperty("sub_type")) {
-                monitor.sub_type =
-                  monitorSubTypeMapping[monitor.sub_type] || monitor.sub_type;
-              }
-              if (monitor.hasOwnProperty("status")) {
-                monitor.status =
-                  monitorStatusMapping[monitor.status] || monitor.status;
-              }
-              if (monitor.hasOwnProperty("all_time_uptime_ratio")) {
+              monitor.type = monitorTypeMapping[monitor.type] || monitor.type;
+              monitor.sub_type =
+                monitorSubTypeMapping[monitor.sub_type] || monitor.sub_type;
+              monitor.status =
+                monitorStatusMapping[monitor.status] || monitor.status;
+              if (monitor.all_time_uptime_ratio) {
                 monitor.all_time_uptime_ratio = parseFloat(
                   monitor.all_time_uptime_ratio
                 ).toFixed(2);
@@ -451,61 +444,65 @@ async function startServer() {
               return monitor;
             });
 
-            if (DB_ACTIVE === true) {
-              // 💾 Store new logs
-              // 💾 Retrieve all existing DB logs for this monitor
-              const [existingLogs] = await db.query(
-                `SELECT id FROM monitor_logs WHERE monitor_id = ?`,
-                [monitorId]
-              );
-
-              const existingLogIds = new Set(existingLogs.map((row) => row.id));
-
-              // 💾 Filter new logs
+            if (DB_ACTIVE === "true") {
               const logs = data.monitors[0]?.logs || [];
 
-              for (const log of logs) {
-                const { id, type, datetime, duration, reason } = log;
+              if (logs.length > 0) {
+                // 💾 Fetch existing logs for this monitor
+                const [existingLogs] = await db.query(
+                  `SELECT id FROM monitor_logs WHERE monitor_id = ?`,
+                  [monitorId]
+                );
 
-                // 👉 If the log already exists, skip
-                if (existingLogIds.has(id)) continue;
+                const existingLogIds = new Set(
+                  existingLogs.map((row) => row.id)
+                );
 
-                try {
-                  await db.query(
-                    `INSERT INTO monitor_logs 
-       (id, monitor_id, type, datetime, duration, reason_code, reason_detail)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                    [
+                let inserted = 0;
+                for (const log of logs) {
+                  const { id, type, datetime, duration, reason } = log;
+                  if (existingLogIds.has(id)) continue;
+
+                  try {
+                    await db.query(
+                      `INSERT INTO monitor_logs 
+                       (id, monitor_id, type, datetime, duration, reason_code, reason_detail)
+                       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                      [
+                        id,
+                        monitorId,
+                        type,
+                        datetime,
+                        duration,
+                        reason.code,
+                        reason.detail,
+                      ]
+                    );
+                    inserted++;
+                    loggerSql.info("MySQL log insert success", {
                       id,
                       monitorId,
                       type,
-                      datetime,
-                      duration,
-                      reason.code,
-                      reason.detail,
-                    ]
-                  );
-
-                  loggerSql.info("MySQL log insert success", {
-                    id,
-                    monitorId,
-                    type,
-                    datetime,
-                    duration,
-                    reason_code: reason.code,
-                    reason_detail: reason.detail,
-                  });
-                } catch (err) {
-                  loggerSql.error("MySQL log insert error", {
-                    error: err.message,
-                  });
+                    });
+                  } catch (err) {
+                    loggerSql.error("MySQL log insert error", {
+                      error: err.message,
+                      log,
+                    });
+                  }
                 }
+
+                loggerSql.info(`Logs processed for monitor ${monitorId}`, {
+                  received: logs.length,
+                  inserted,
+                  skipped: logs.length - inserted,
+                });
               }
 
-              // 📤 Retrieve all logs from the DB
+              // 📤 Fetch all logs from DB
               const [dbLogs] = await db.query(
                 `SELECT id, type, datetime, duration, reason_code AS code, reason_detail AS detail
-           FROM monitor_logs WHERE monitor_id = ? ORDER BY datetime DESC`,
+                 FROM monitor_logs WHERE monitor_id = ? ORDER BY datetime DESC`,
                 [monitorId]
               );
 
