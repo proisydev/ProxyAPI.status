@@ -4,7 +4,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 dotenv.config();
-import { db } from "./libs/db.js";
+import { db, initDatabase } from "./libs/db.js";
 import { Cache } from "./libs/cache.js";
 import { Logger } from "./libs/logger.js";
 import { fetchWithRetry } from "./utils/fetch-with-retry.js";
@@ -33,7 +33,14 @@ if (!UPTIME_ROBOT_API_KEY_READ_ONLY) {
   );
   process.exit(1);
 }
-const DB_ACTIVE = process.env.DB_ACTIVE || false;
+
+const DB_ACTIVE = process.env.DB_ACTIVE || "false";
+if (DB_ACTIVE === "true") {
+  initDatabase().catch((err) => {
+    logger.error("Database initialization failed", { error: err.message });
+    process.exit(1);
+  });
+}
 
 const UPTIME_ROBOT_API_URL = "https://api.uptimerobot.com/v2";
 const UPTIME_ROBOT_API_PAGES_URL = "https://stats.uptimerobot.com/api";
@@ -275,7 +282,7 @@ if (UPTIME_ROBOT_API_KEY_READ_ONLY) {
           return monitor;
         });
 
-        if (DB_ACTIVE === true) {
+        if (DB_ACTIVE === "true") {
           // 🔌 Save to DB
           // 💾 Retrieve all existing DB monitors
           const [existingMonitors] = await db.query(
@@ -418,7 +425,7 @@ if (UPTIME_ROBOT_API_KEY_READ_ONLY) {
           return monitor;
         });
 
-        if (DB_ACTIVE === true) {
+        if (DB_ACTIVE === "true") {
           // 💾 Store new logs
           // 💾 Retrieve all existing DB logs for this monitor
           const [existingLogs] = await db.query(
