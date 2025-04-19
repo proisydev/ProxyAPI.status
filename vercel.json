@@ -6,6 +6,9 @@
       "use": "@vercel/node"
     }
   ],
+  "engines": {
+    "node": "22.x"
+  },
   "routes": [
     {
       "src": "/api/(.*)",
@@ -17,12 +20,12 @@
       }
     },
     {
-      "src": "/health",
+      "src": "/ws/health",
       "dest": "/src/index.js",
       "methods": ["GET"]
     },
     {
-      "src": "/metrics",
+      "src": "/ws/metrics",
       "dest": "/src/index.js",
       "methods": ["GET"]
     },
