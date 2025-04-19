@@ -6,9 +6,6 @@
       "use": "@vercel/node"
     }
   ],
-  "engines": {
-    "node": "22.x"
-  },
   "routes": [
     {
       "src": "/api/(.*)",
