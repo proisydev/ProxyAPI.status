@@ -19,10 +19,15 @@ const endpoints = [
   },
   {
     name: "Get Monitor Details",
-    path: "/api/monitor/{page_id}/{monitor_id}",
+    path: "/api/monitor/{monitorId}",
     method: "GET",
-    description:
-      "Get more detailed information than official API about a specific service with the Uptime Robots Page API",
+    description: "Retrieve detailed information about a specific monitor",
+  },
+  {
+    name: "Get Monitor Details (Public Page)",
+    path: "/api/monitor/{pageId}/{monitorId}",
+    method: "GET",
+    description: "Retrieve monitor details using public page data",
   },
   {
     name: "Get Public Pages",
@@ -36,6 +41,18 @@ const endpoints = [
     method: "GET",
     description:
       "Retrieve account details, optionally with privacy settings applied",
+  },
+  {
+    name: "Clear Cache",
+    path: "/api/clear-cache",
+    method: "POST",
+    description: "Clear all cached data manually",
+  },
+  {
+    name: "404 Handler",
+    path: "/*",
+    method: "ALL",
+    description: "Catch-all endpoint for undefined routes",
   },
 ];
 

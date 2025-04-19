@@ -1,7 +1,7 @@
 // Function to update active button styles
 function updateActiveButton(activeBtn) {
   // Reset all buttons
-  [btnEndpoints, btnError, btnLimits].forEach((btn) => {
+  [btnEndpoints, btnError, btnLimits, btnInstallation].forEach((btn) => {
     btn.classList.remove("text-purple");
     btn.classList.add("text-gray-400");
     btn.classList.remove("text-purple-light");
@@ -15,9 +15,11 @@ function updateActiveButton(activeBtn) {
 // Function to show content
 function showContent(contentToShow) {
   // Hide all content sections
-  [endpointsContent, errorContent, limitsContent].forEach((content) => {
-    content.classList.add("hidden");
-  });
+  [endpointsContent, errorContent, limitsContent, installationContent].forEach(
+    (content) => {
+      content.classList.add("hidden");
+    }
+  );
 
   // Show selected content
   contentToShow.classList.remove("hidden");
@@ -31,6 +33,11 @@ function showContent(contentToShow) {
 btnEndpoints.addEventListener("click", () => {
   updateActiveButton(btnEndpoints);
   showContent(endpointsContent);
+});
+
+btnInstallation.addEventListener("click", () => {
+  updateActiveButton(btnInstallation);
+  showContent(installationContent);
 });
 
 btnError.addEventListener("click", () => {
