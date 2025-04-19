@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "/src/index.js",
+      "src": "src/index.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/src/index.js",
+      "dest": "src/index.js",
       "methods": ["GET", "POST", "OPTIONS"],
       "headers": {
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -18,17 +18,17 @@
     },
     {
       "src": "/ws/health",
-      "dest": "/src/index.js",
+      "dest": "src/index.js",
       "methods": ["GET"]
     },
     {
       "src": "/ws/metrics",
-      "dest": "/src/index.js",
+      "dest": "src/index.js",
       "methods": ["GET"]
     },
     {
       "src": "/(.*)",
-      "dest": "/src/index.js"
+      "dest": "src/index.js"
     }
   ]
 }

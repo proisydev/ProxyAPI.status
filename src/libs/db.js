@@ -1,9 +1,10 @@
 import mysql from "mysql2/promise";
 import dotenv from "dotenv";
 dotenv.config();
-
 import { Logger } from "./logger.js";
+
 const logger = new Logger("MySQL");
+const DB_ACTIVE = process.env.DB_ACTIVE || false;
 
 export const db = mysql.createPool({
   host: process.env.DB_HOST,
@@ -15,9 +16,10 @@ export const db = mysql.createPool({
   queueLimit: 0,
 });
 
-async function initDatabase() {
-  try {
-    const createMonitorsTable = `
+if (DB_ACTIVE === true) {
+  async function initDatabase() {
+    try {
+      const createMonitorsTable = `
       CREATE TABLE IF NOT EXISTS monitors (
         id BIGINT PRIMARY KEY,
         friendly_name VARCHAR(255),
@@ -26,7 +28,7 @@ async function initDatabase() {
       );
     `;
 
-    const createLogsTable = `
+      const createLogsTable = `
       CREATE TABLE IF NOT EXISTS monitor_logs (
         id BIGINT PRIMARY KEY,
         monitor_id BIGINT,
@@ -40,16 +42,20 @@ async function initDatabase() {
       );
     `;
 
-    const connection = await db.getConnection();
-    await connection.query(createMonitorsTable);
-    await connection.query(createLogsTable);
-    connection.release();
+      const connection = await db.getConnection();
+      await connection.query(createMonitorsTable);
+      await connection.query(createLogsTable);
+      connection.release();
 
-    logger.info("MySQL tables checked and ready ✅");
-  } catch (err) {
-    logger.error("Error initializing database", { error: err.message });
-    process.exit(1);
+      logger.info("MySQL tables checked and ready ✅");
+    } catch (err) {
+      logger.error("Error initializing database", { error: err.message });
+      process.exit(1);
+    }
   }
-}
 
-await initDatabase();
+  await initDatabase();
+} else {
+  logger.warn("MySQL is disabled. No database connection will be made.");
+  logger.warn("Set DB_ACTIVE=true in .env to enable MySQL.");
+}

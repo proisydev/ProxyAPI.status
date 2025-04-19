@@ -33,6 +33,7 @@ if (!UPTIME_ROBOT_API_KEY_READ_ONLY) {
   );
   process.exit(1);
 }
+const DB_ACTIVE = process.env.DB_ACTIVE || false;
 
 const UPTIME_ROBOT_API_URL = "https://api.uptimerobot.com/v2";
 const UPTIME_ROBOT_API_PAGES_URL = "https://stats.uptimerobot.com/api";
@@ -274,39 +275,41 @@ if (UPTIME_ROBOT_API_KEY_READ_ONLY) {
           return monitor;
         });
 
-        // 🔌 Save to DB
-        // 💾 Retrieve all existing DB monitors
-        const [existingMonitors] = await db.query(
-          `SELECT id FROM monitors WHERE id = ?`,
-          [monitorId]
-        );
+        if (DB_ACTIVE === true) {
+          // 🔌 Save to DB
+          // 💾 Retrieve all existing DB monitors
+          const [existingMonitors] = await db.query(
+            `SELECT id FROM monitors WHERE id = ?`,
+            [monitorId]
+          );
 
-        const existingMonitorsIds = new Set(
-          existingMonitors.map((row) => row.id)
-        );
+          const existingMonitorsIds = new Set(
+            existingMonitors.map((row) => row.id)
+          );
 
-        // 💾 Filter new logs
-        const logs = data.monitors[0]?.logs || [];
+          // 💾 Filter new logs
+          const logs = data.monitors[0]?.logs || [];
 
-        for (const monitor of data.monitors) {
-          const { id, friendly_name, url } = monitor;
+          for (const monitor of data.monitors) {
+            const { id, friendly_name, url } = monitor;
 
-          // 👉 If the monitor already exists, skip
-          if (existingMonitorsIds.has(id)) continue;
-          try {
-            await db.query(
-              `INSERT IGNORE INTO monitors (id, friendly_name, url) VALUES (?, ?, ?)`,
-              [id, friendly_name, url]
-            );
-            loggerSql.info("MySQL insert monitor success", {
-              id,
-              friendly_name,
-              url,
-            });
-          } catch (err) {
-            loggerSql.error("MySQL insert monitor error", {
-              error: err.message,
-            });
+            // 👉 If the monitor already exists, skip
+            if (existingMonitorsIds.has(id)) continue;
+            try {
+              await db.query(
+                `INSERT IGNORE INTO monitors (id, friendly_name, url) VALUES (?, ?, ?)`,
+                [id, friendly_name, url]
+              );
+              loggerSql.info("MySQL insert monitor success", {
+                id,
+                friendly_name,
+                url,
+              });
+            } catch (err) {
+              loggerSql.error("MySQL insert monitor error", {
+                error: err.message,
+              });
+            }
           }
         }
       }
@@ -415,71 +418,73 @@ if (UPTIME_ROBOT_API_KEY_READ_ONLY) {
           return monitor;
         });
 
-        // 💾 Store new logs
-        // 💾 Retrieve all existing DB logs for this monitor
-        const [existingLogs] = await db.query(
-          `SELECT id FROM monitor_logs WHERE monitor_id = ?`,
-          [monitorId]
-        );
+        if (DB_ACTIVE === true) {
+          // 💾 Store new logs
+          // 💾 Retrieve all existing DB logs for this monitor
+          const [existingLogs] = await db.query(
+            `SELECT id FROM monitor_logs WHERE monitor_id = ?`,
+            [monitorId]
+          );
 
-        const existingLogIds = new Set(existingLogs.map((row) => row.id));
+          const existingLogIds = new Set(existingLogs.map((row) => row.id));
 
-        // 💾 Filter new logs
-        const logs = data.monitors[0]?.logs || [];
+          // 💾 Filter new logs
+          const logs = data.monitors[0]?.logs || [];
 
-        for (const log of logs) {
-          const { id, type, datetime, duration, reason } = log;
+          for (const log of logs) {
+            const { id, type, datetime, duration, reason } = log;
 
-          // 👉 If the log already exists, skip
-          if (existingLogIds.has(id)) continue;
+            // 👉 If the log already exists, skip
+            if (existingLogIds.has(id)) continue;
 
-          try {
-            await db.query(
-              `INSERT INTO monitor_logs 
+            try {
+              await db.query(
+                `INSERT INTO monitor_logs 
        (id, monitor_id, type, datetime, duration, reason_code, reason_detail)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-              [
+                [
+                  id,
+                  monitorId,
+                  type,
+                  datetime,
+                  duration,
+                  reason.code,
+                  reason.detail,
+                ]
+              );
+
+              loggerSql.info("MySQL log insert success", {
                 id,
                 monitorId,
                 type,
                 datetime,
                 duration,
-                reason.code,
-                reason.detail,
-              ]
-            );
-
-            loggerSql.info("MySQL log insert success", {
-              id,
-              monitorId,
-              type,
-              datetime,
-              duration,
-              reason_code: reason.code,
-              reason_detail: reason.detail,
-            });
-          } catch (err) {
-            loggerSql.error("MySQL log insert error", { error: err.message });
+                reason_code: reason.code,
+                reason_detail: reason.detail,
+              });
+            } catch (err) {
+              loggerSql.error("MySQL log insert error", { error: err.message });
+            }
           }
-        }
 
-        // 📤 Retrieve all logs from the DB
-        const [dbLogs] = await db.query(
-          `SELECT id, type, datetime, duration, reason_code AS code, reason_detail AS detail
+          // 📤 Retrieve all logs from the DB
+          const [dbLogs] = await db.query(
+            `SELECT id, type, datetime, duration, reason_code AS code, reason_detail AS detail
            FROM monitor_logs WHERE monitor_id = ? ORDER BY datetime DESC`,
-          [monitorId]
-        );
+            [monitorId]
+          );
 
-        data.monitors[0].logs = dbLogs.map((log) => ({
-          id: log.id,
-          type: log.type,
-          datetime: log.datetime,
-          duration: log.duration,
-          reason: {
-            code: log.code,
-            detail: log.detail,
-          },
-        }));
+          data.monitors[0].logs = dbLogs.map((log) => ({
+            id: log.id,
+            type: log.type,
+            datetime: log.datetime,
+            duration: log.duration,
+            reason: {
+              code: log.code,
+              detail: log.detail,
+            },
+          }));
+        }
       }
 
       monitorDetailsCache.set(cacheKey, data);
