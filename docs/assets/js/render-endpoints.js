@@ -86,8 +86,8 @@ async function testEndpoint(path) {
   try {
     // Replace path parameters with actual values
     const actualPath = path
-      .replace("{page_id}", "x5tkeYyJ3g")
-      .replace("{monitor_id}", "799396413");
+      .replace("{pageId}", "x5tkeYyJ3g")
+      .replace("{monitorId}", "799396413");
 
     const response = await fetch(`https://demo-api.watchstat.us${actualPath}`);
     const data = await response.json();
