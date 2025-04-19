@@ -4,6 +4,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 dotenv.config();
+import { db } from "./libs/db.js";
 import { Cache } from "./libs/cache.js";
 import { Logger } from "./libs/logger.js";
 import { fetchWithRetry } from "./utils/fetch-with-retry.js";
@@ -13,9 +14,11 @@ import {
   monitorSubTypeMapping,
   monitorStatusMapping,
 } from "./utils/mappings.js";
+import { isIP } from "net";
 
 // Initialize logger
 const logger = new Logger("UptimeRobot API");
+const loggerSql = new Logger("MySQL");
 
 // Environment variables
 const PORT = process.env.PORT || 3000;
@@ -49,6 +52,7 @@ const accountCache = new Cache(2 * 60 * 1000);
 
 // Initialize Express app
 const app = express();
+app.set("trust proxy", "loopback");
 
 // Middleware for domain verification
 app.use((req, res, next) => {
@@ -69,7 +73,6 @@ app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
-      console.log("Request origin:", origin);
       if (!origin) return callback(null, true); // Allow non-browser requests
 
       const isAllowed = allowedOrigins.some((allowed) =>
@@ -101,6 +104,7 @@ app.use(limiter);
 app.use((req, res, next) => {
   const start = Date.now();
   metrics.incrementRequestCount();
+  const clientIp = req.ip;
 
   res.on("finish", () => {
     const duration = Date.now() - start;
@@ -110,12 +114,16 @@ app.use((req, res, next) => {
       metrics.incrementErrorCount();
     }
 
+    if (!isIP(clientIp)) {
+      logger.warn("Invalid IP address detected", { ip: clientIp });
+    }
+
     logger.info(`${req.method} ${req.originalUrl}`, {
       method: req.method,
       url: req.originalUrl,
       status: res.statusCode,
       duration: `${duration}ms`,
-      ip: req.ip,
+      ip: clientIp,
     });
   });
 
@@ -245,7 +253,7 @@ if (UPTIME_ROBOT_API_KEY_READ_ONLY) {
         });
       }
 
-      if (data && data.monitors && Array.isArray(data.monitors)) {
+      if (data?.monitors?.length) {
         data.monitors = data.monitors.map((monitor) => {
           if (monitor.hasOwnProperty("type")) {
             monitor.type = monitorTypeMapping[monitor.type] || monitor.type;
@@ -265,12 +273,276 @@ if (UPTIME_ROBOT_API_KEY_READ_ONLY) {
           }
           return monitor;
         });
+
+        // 🔌 Save to DB
+        // 💾 Retrieve all existing DB monitors
+        const [existingMonitors] = await db.query(
+          `SELECT id FROM monitors WHERE id = ?`,
+          [monitorId]
+        );
+
+        const existingMonitorsIds = new Set(
+          existingMonitors.map((row) => row.id)
+        );
+
+        // 💾 Filter new logs
+        const logs = data.monitors[0]?.logs || [];
+
+        for (const monitor of data.monitors) {
+          const { id, friendly_name, url } = monitor;
+
+          // 👉 If the monitor already exists, skip
+          if (existingMonitorsIds.has(id)) continue;
+          try {
+            await db.query(
+              `INSERT IGNORE INTO monitors (id, friendly_name, url) VALUES (?, ?, ?)`,
+              [id, friendly_name, url]
+            );
+            loggerSql.info("MySQL insert monitor success", {
+              id,
+              friendly_name,
+              url,
+            });
+          } catch (err) {
+            loggerSql.error("MySQL insert monitor error", {
+              error: err.message,
+            });
+          }
+        }
       }
 
       monitorsCache.set("all_monitors", data);
       res.json({ success: true, data });
     } catch (error) {
       logger.error("Error in /api/monitors", { error: error.message });
+      next(error);
+    }
+  });
+
+  // Endpoint: Get monitor details with monitors by ID with getMonitors [Real API authorized]
+  app.get("/api/monitor/:monitorId", async (req, res, next) => {
+    const { monitorId } = req.params;
+
+    if (!monitorId) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 400,
+          message: "Missing required query parameter: monitorId",
+        },
+      });
+    }
+
+    const cacheKey = `monitor_${monitorId}`;
+    const cachedData = monitorDetailsCache.get(cacheKey);
+    if (cachedData) {
+      logger.debug(`Returning cached data for monitor ${monitorId}`);
+      metrics.recordCacheHit();
+      return res.json({ success: true, data: cachedData });
+    }
+
+    metrics.recordCacheMiss();
+    logger.info(`Fetching fresh data for monitor ${monitorId}`);
+
+    try {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+      const responseTimesStartDate = Math.floor(sevenDaysAgo.getTime() / 1000);
+
+      const response = await fetchWithRetry(
+        `${UPTIME_ROBOT_API_URL}/getMonitors`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache",
+          },
+          body: JSON.stringify({
+            api_key: UPTIME_ROBOT_API_KEY_READ_ONLY,
+            format: "json",
+            all_time_uptime_ratio: 1,
+            all_time_uptime_durations: 1,
+            response_times_average: 1,
+            response_times_start_date: responseTimesStartDate,
+            response_times_end_date: Math.floor(Date.now() / 1000),
+            logs: 1,
+            response_times: 1,
+            response_times_count: 1,
+            mwindows: 1,
+            timezone: 1,
+            ssl: 1,
+            monitors: monitorId,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        logger.error("UptimeRobot API error", {
+          status: response.status,
+          data,
+        });
+        return res.status(response.status || 500).json({
+          success: false,
+          error: {
+            code: response.status || 500,
+            message: "Failed to fetch monitors",
+            details: data,
+          },
+        });
+      }
+
+      // 🔄 Property mapping
+      if (data?.monitors?.length) {
+        data.monitors = data.monitors.map((monitor) => {
+          if (monitor.hasOwnProperty("type")) {
+            monitor.type = monitorTypeMapping[monitor.type] || monitor.type;
+          }
+          if (monitor.hasOwnProperty("sub_type")) {
+            monitor.sub_type =
+              monitorSubTypeMapping[monitor.sub_type] || monitor.sub_type;
+          }
+          if (monitor.hasOwnProperty("status")) {
+            monitor.status =
+              monitorStatusMapping[monitor.status] || monitor.status;
+          }
+          if (monitor.hasOwnProperty("all_time_uptime_ratio")) {
+            monitor.all_time_uptime_ratio = parseFloat(
+              monitor.all_time_uptime_ratio
+            ).toFixed(2);
+          }
+          return monitor;
+        });
+
+        // 💾 Store new logs
+        // 💾 Retrieve all existing DB logs for this monitor
+        const [existingLogs] = await db.query(
+          `SELECT id FROM monitor_logs WHERE monitor_id = ?`,
+          [monitorId]
+        );
+
+        const existingLogIds = new Set(existingLogs.map((row) => row.id));
+
+        // 💾 Filter new logs
+        const logs = data.monitors[0]?.logs || [];
+
+        for (const log of logs) {
+          const { id, type, datetime, duration, reason } = log;
+
+          // 👉 If the log already exists, skip
+          if (existingLogIds.has(id)) continue;
+
+          try {
+            await db.query(
+              `INSERT INTO monitor_logs 
+       (id, monitor_id, type, datetime, duration, reason_code, reason_detail)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [
+                id,
+                monitorId,
+                type,
+                datetime,
+                duration,
+                reason.code,
+                reason.detail,
+              ]
+            );
+
+            loggerSql.info("MySQL log insert success", {
+              id,
+              monitorId,
+              type,
+              datetime,
+              duration,
+              reason_code: reason.code,
+              reason_detail: reason.detail,
+            });
+          } catch (err) {
+            loggerSql.error("MySQL log insert error", { error: err.message });
+          }
+        }
+
+        // 📤 Retrieve all logs from the DB
+        const [dbLogs] = await db.query(
+          `SELECT id, type, datetime, duration, reason_code AS code, reason_detail AS detail
+           FROM monitor_logs WHERE monitor_id = ? ORDER BY datetime DESC`,
+          [monitorId]
+        );
+
+        data.monitors[0].logs = dbLogs.map((log) => ({
+          id: log.id,
+          type: log.type,
+          datetime: log.datetime,
+          duration: log.duration,
+          reason: {
+            code: log.code,
+            detail: log.detail,
+          },
+        }));
+      }
+
+      monitorDetailsCache.set(cacheKey, data);
+      res.json({ success: true, data });
+    } catch (error) {
+      logger.error("Error in /api/monitor/:monitorId", {
+        error: error.message,
+      });
+      next(error);
+    }
+  });
+
+  // Endpoint: Get specific monitor details with public page method [Not a real API authorized]
+  app.get("/api/monitor/:pageId/:monitorId", async (req, res, next) => {
+    try {
+      const { pageId, monitorId } = req.params;
+      const cacheKey = `psp_monitor_${pageId}_${monitorId}`;
+
+      const cachedData = monitorDetailsCache.get(cacheKey);
+      if (cachedData) {
+        logger.debug(
+          `Returning cached data for monitor ${monitorId} with pageId ${pageId}`
+        );
+        metrics.recordCacheHit();
+        return res.json({ success: true, data: cachedData });
+      }
+
+      metrics.recordCacheMiss();
+      logger.info(`Fetching fresh data for monitor ${monitorId}`);
+
+      const response = await fetchWithRetry(
+        `${UPTIME_ROBOT_API_PAGES_URL}/getMonitor/${pageId}?m=${monitorId}`,
+        {
+          method: "GET",
+          headers: {
+            "Cache-Control": "no-cache",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        logger.error("UptimeRobot status page API error", {
+          status: response.status,
+          data,
+        });
+        return res.status(response.status || 500).json({
+          success: false,
+          error: {
+            code: response.status || 500,
+            message: "Failed to fetch monitor details",
+            details: data,
+          },
+        });
+      }
+
+      monitorDetailsCache.set(cacheKey, data);
+      res.json({ success: true, data });
+    } catch (error) {
+      logger.error("Error in /api/monitor/:pageId/:monitorId", {
+        error: error.message,
+      });
       next(error);
     }
   });
@@ -325,59 +597,6 @@ if (UPTIME_ROBOT_API_KEY_READ_ONLY) {
     }
   });
 }
-
-// Endpoint: Get specific monitor details
-app.get("/api/monitor/:pageId/:monitorId", async (req, res, next) => {
-  try {
-    const { pageId, monitorId } = req.params;
-    const cacheKey = `monitor_${pageId}_${monitorId}`;
-
-    const cachedData = monitorDetailsCache.get(cacheKey);
-    if (cachedData) {
-      logger.debug(`Returning cached data for monitor ${monitorId}`);
-      metrics.recordCacheHit();
-      return res.json({ success: true, data: cachedData });
-    }
-
-    metrics.recordCacheMiss();
-    logger.info(`Fetching fresh data for monitor ${monitorId}`);
-
-    const response = await fetchWithRetry(
-      `${UPTIME_ROBOT_API_PAGES_URL}/getMonitor/${pageId}?m=${monitorId}`,
-      {
-        method: "GET",
-        headers: {
-          "Cache-Control": "no-cache",
-        },
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      logger.error("UptimeRobot status page API error", {
-        status: response.status,
-        data,
-      });
-      return res.status(response.status || 500).json({
-        success: false,
-        error: {
-          code: response.status || 500,
-          message: "Failed to fetch monitor details",
-          details: data,
-        },
-      });
-    }
-
-    monitorDetailsCache.set(cacheKey, data);
-    res.json({ success: true, data });
-  } catch (error) {
-    logger.error("Error in /api/monitor/:pageId/:monitorId", {
-      error: error.message,
-    });
-    next(error);
-  }
-});
 
 // Endpoint: Clear cache
 app.post("/api/clear-cache", (req, res) => {
