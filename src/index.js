@@ -4,7 +4,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 dotenv.config();
-import { db, initDatabase } from "./libs/db.js";
+import { db } from "./libs/db.js";
 import { Cache } from "./libs/cache.js";
 import { Logger } from "./libs/logger.js";
 import { fetchWithRetry } from "./utils/fetch-with-retry.js";
@@ -33,14 +33,7 @@ if (!UPTIME_ROBOT_API_KEY_READ_ONLY) {
   );
   process.exit(1);
 }
-
-const DB_ACTIVE = process.env.DB_ACTIVE || "false";
-if (DB_ACTIVE === "true") {
-  initDatabase().catch((err) => {
-    logger.error("Database initialization failed", { error: err.message });
-    process.exit(1);
-  });
-}
+const DB_ACTIVE = process.env.DB_ACTIVE || false;
 
 const UPTIME_ROBOT_API_URL = "https://api.uptimerobot.com/v2";
 const UPTIME_ROBOT_API_PAGES_URL = "https://stats.uptimerobot.com/api";
@@ -283,40 +276,62 @@ if (UPTIME_ROBOT_API_KEY_READ_ONLY) {
         });
 
         if (DB_ACTIVE === "true") {
-          // 🔌 Save to DB
-          // 💾 Retrieve all existing DB monitors
+          // 🔌 Get existing monitors from DB
           const [existingMonitors] = await db.query(
-            `SELECT id FROM monitors WHERE id = ?`,
-            [monitorId]
+            `SELECT id, friendly_name, url FROM monitors`
           );
 
-          const existingMonitorsIds = new Set(
-            existingMonitors.map((row) => row.id)
+          const existingMonitorsMap = new Map(
+            existingMonitors.map((row) => [
+              row.id,
+              { friendly_name: row.friendly_name, url: row.url },
+            ])
           );
-
-          // 💾 Filter new logs
-          const logs = data.monitors[0]?.logs || [];
 
           for (const monitor of data.monitors) {
             const { id, friendly_name, url } = monitor;
 
-            // 👉 If the monitor already exists, skip
-            if (existingMonitorsIds.has(id)) continue;
-            try {
-              await db.query(
-                `INSERT IGNORE INTO monitors (id, friendly_name, url) VALUES (?, ?, ?)`,
-                [id, friendly_name, url]
-              );
-              loggerSql.info("MySQL insert monitor success", {
-                id,
-                friendly_name,
-                url,
-              });
-            } catch (err) {
-              loggerSql.error("MySQL insert monitor error", {
-                error: err.message,
-              });
+            const existing = existingMonitorsMap.get(id);
+
+            if (!existing) {
+              // ➕ Insert new monitor
+              try {
+                await db.query(
+                  `INSERT INTO monitors (id, friendly_name, url) VALUES (?, ?, ?)`,
+                  [id, friendly_name, url]
+                );
+                loggerSql.info("MySQL insert monitor success", {
+                  id,
+                  friendly_name,
+                  url,
+                });
+              } catch (err) {
+                loggerSql.error("MySQL insert monitor error", {
+                  error: err.message,
+                });
+              }
+            } else if (
+              existing.friendly_name !== friendly_name ||
+              existing.url !== url
+            ) {
+              // 🔄 Update if anything changed
+              try {
+                await db.query(
+                  `UPDATE monitors SET friendly_name = ?, url = ? WHERE id = ?`,
+                  [friendly_name, url, id]
+                );
+                loggerSql.info("MySQL update monitor success", {
+                  id,
+                  new_name: friendly_name,
+                  new_url: url,
+                });
+              } catch (err) {
+                loggerSql.error("MySQL update monitor error", {
+                  error: err.message,
+                });
+              }
             }
+            // Otherwise nothing to do, already in sync 👌
           }
         }
       }
@@ -425,7 +440,7 @@ if (UPTIME_ROBOT_API_KEY_READ_ONLY) {
           return monitor;
         });
 
-        if (DB_ACTIVE === "true") {
+        if (DB_ACTIVE === true) {
           // 💾 Store new logs
           // 💾 Retrieve all existing DB logs for this monitor
           const [existingLogs] = await db.query(
