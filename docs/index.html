@@ -549,9 +549,15 @@ yarn install</code></pre>
                   <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
                 </svg>
                 Set Up the Database
+                <span class="text-sm text-gray-400 ml-2">(Optional)</span>
               </h2>
               <p class="text-gray-300 mb-3">
-                Create a MySQL database and configure the credentials in the
+                To use the database features, set the
+                <code class="text-purple-light">DB_ACTIVE</code> variable to
+                <code class="text-purple-light">true</code>. You need to set up
+                a MySQL database. <br />
+                The API will create the necessary tables. Configure the MySQL
+                database credentials in the
                 <code class="text-purple-light">.env</code> file:
               </p>
               <div class="code-block">
